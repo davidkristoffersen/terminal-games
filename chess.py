@@ -8,29 +8,29 @@ t_col = {False: '\x1b[1;38;2;0;0;0m', True: '\x1b[1;38;2;255;255;255m', None: '\
 pieces = {  # n: name, p:, print, t: team, vp: valid pos, vt: valid type ♔ ♕ ♖ ♗ ♘ ♙ ♚ ♛ ♜ ♝ ♞ ♟
         'k': {'n': 'king', 'p': '♔', 't': None,
             'vp': lambda a, b,t: True if b[0] - a[0] in [-1, 0, 1] and b[1] - a[1] in [-1, 0, 1] else False, 
-            'vt': lambda a, b: False},
+            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'q': {'n': 'queen', 'p': '♕', 't': None,
             'vp': lambda a, b, t: True if (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) or
             (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
-            'vt': lambda a, b: False},
+            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'r': {'n': 'rook', 'p': '♖', 't': None,
             'vp': lambda a, b, t: True if (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
-            'vt': lambda a, b: False},
+            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'c': {'n': 'knight', 'p': '♘', 't': None,
             'vp': lambda a, b, t: True if (b[0] - a[0] in [-2, 2] and b[1] - a[1] in [-1, 1]) or (b[0] - a[0] in [-1, 1] and b[1] - a[1] in [-2, 2]) else False, 
-            'vt': lambda a, b: False},
+            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'b': {'n': 'bishop', 'p': '♗', 't': None,
             'vp': lambda a, b, t: True if b[0] - a[0] and b[1] - a[1] and (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) else False, 
-            'vt': lambda a, b: False},
+            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'p': {'n': 'pawn', 'p': '♙', 't': None,
             'vp': lambda a, b, t: True if not b[1] - a[1] and 
             ((b[0] - a[0] == -1 or (b[0] - a[0] == -2 and a[0] == 6)) and t) or
             ((b[0] - a[0] == 1 or (b[0] - a[0] == 2 and a[0] == 1)) and not t)
             else False, 
-            'vt': lambda a, b: False},
+            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'n': {'n': 'nonce', 'p': 'n',  't': None,
             'vp': lambda a, b, t: False, 
-            'vt': lambda a, b: False}
+            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         }
 
 board_list =    [   # Lower is black, upper is white. n is empty
@@ -51,11 +51,11 @@ size = 8
 memcpy = lambda x: {key: val for key, val in x.items()}
 
 # For printing the board
-pi = lambda i: print('\x1b[1;38;2;175;105;44m' + str([' ', 8, 7, 6, 5, 4, 3, 2, 1, ' '][i + 1]) + ' \x1b[m', end = ' ')
-pj = lambda j: print('\x1b[1;38;2;175;105;44m' + ' abcdefgh '[j+1] + ' \x1b[m', end = ' ')
+pi = lambda i: print('\x1b[1;38;2;175;105;44m' + str([' ', 8, 7, 6, 5, 4, 3, 2, 1, ' '][i + 1]) + '\x1b[m', end = ' ')
+pj = lambda j: print('\x1b[1;38;2;175;105;44m' + ' abcdefgh '[j+1] + '\x1b[m', end = ' ')
 cij = lambda i, j:  pi(i) if j in [-1, 8] else pj(j)
 
-prb = lambda x: [[print(t_col[board[i][j]['t']] + board[i][j]['p'] + ' \x1b[m', end = ' ') 
+prb = lambda x: [[print(t_col[board[i][j]['t']] + board[i][j]['p'] + '\x1b[m', end = ' ') 
     if j in range(8) and i in range(8) else cij(i, j) for j in range(-1, size + 1)] for i in range(-1, size + 1) if not print()]
 
 # For converting input to correct index
@@ -87,13 +87,16 @@ def action():
     while True:
         ch = input()
         if inp_val(ch): return ch
+        # os.system('clear')
+        # prb(board)
+        print('\n\x1b[38;2;255;0;0mInvalid input!\x1b[0;2m\t(press enter)\x1b[m', end='')
+        input()
         os.system('clear')
         prb(board)
-        print('\n\x1b[38;2;255;0;0mInvalid input!\x1b[m', end='')
-        print('\nAction: ', end = '')
+        print('\n\nAction: ', end = '')
 
 def move_valid(ch):
-    print(ch)
+    # print(ch)
     p1, p2 = board[ch[0][0]][ch[0][1]], board[ch[1][0]][ch[1][1]]
     pos1, pos2 = [ch[0][0], ch[0][1]], [ch[1][0], ch[1][1]]
     if p1['n'] == 'nonce': 
@@ -102,6 +105,9 @@ def move_valid(ch):
     if not p1['vp'](pos1, pos2, p1['t']):
         print('\n\x1b[38;2;255;0;0mInvalid position!\x1b[0;2m\t(press enter)\x1b[m', end = '')
         return False
+    if not p1['vt'](p1, p2):
+        print('\n\x1b[38;2;255;0;0mCannot move on this piece type!\x1b[0;2m\t(press enter)\x1b[m', end = '')
+        return False
 
     return True
 
@@ -109,7 +115,7 @@ def move_valid(ch):
 def move(ch):
     board[ch[1][0]][ch[1][1]] = board[ch[0][0]][ch[0][1]]
     board[ch[0][0]][ch[0][1]] = memcpy(pieces['n'])
-    prb(board)
+    # prb(board)    # TEMP
 
 # 16 pieces: one king, one queen, two rooks, two knights, two bishops, and eight pawns
 if __name__ == '__main__':
@@ -123,5 +129,5 @@ if __name__ == '__main__':
             if move_valid(ch): break
             input()
         move(ch)
-        print('\n\n\x1b[0;2mPress enter\x1b[m', end = '')
-        input()
+        # print('\n\n\x1b[0;2mPress enter\x1b[m', end = '') # TEMP
+        # input()   # TEMP
