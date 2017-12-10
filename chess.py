@@ -66,40 +66,24 @@ pieces = {  # n: name, p:, print, t: team, vp: valid pos, vt: valid type, vm: va
 st_coll = lambda a0, b0, a1, b1, br, v: len(list(filter(lambda x: not x, 
                     [False if (v and not br[i][a0]['t'] == None) or (not v and not br[a0][i]['t'] == None) else True for i in range(a1 + int((b1 - a1) / abs(b1 - a1)), b1, int((b1 - a1) / abs(b1 - a1)))]
                 ))) > 0
-# Diagonal movement
-dia_coll = lambda a0, a1, b0, b1, br, f: (print(
-    a0, a1, b0, b1, f) or print(
-        list(zip(*
-        [
-            [
-            i for i in 
-            range(
-            a0 + int((b0 - a0) / (abs(b0 - a0) if not b0 - a0 == 0 else 1)), 
-            b0, 
-            int((b0 - a0) / (abs(b0 - a0) if not b0 - a0 == 0 else 1)))
-            ],
-            [
-            j for j in 
-            range(
-            a1 + int((b1 - a1) / (abs(b1 - a1) if not b1 - a1 == 0 else 1)), 
-            b1, 
-            int((b1 - a1) / (abs(b1 - a1) if not b1 - a1 == 0 else 1))) 
-            ]
-        ]
-        ))
-    )
-    or True) and len(list(filter(lambda x: not x,
-    [False if not f and not br[i][a1 + idx * int((b1 - a1) / (abs(b1 - a1) if not b1 - a1 == 0 else 1))]['t'] == None else True 
-    # [True 
-        for idx, i in 
-            enumerate(range(
-            a0 + int((b0 - a0) / (abs(b0 - a0) if not b0 - a0 == 0 else 1)), 
-            b0, 
-            int((b0 - a0) / (abs(b0 - a0) if not b0 - a0 == 0 else 1))
-            ))
-            ]))) > 0
 
-board_list_old =    [   # Lower is black, upper is white. n is empty
+# Diagonal movement
+dia_tup = lambda a0, a1, b0, b1: list(zip(
+        range(
+        a0 + int((b0 - a0) / (abs(b0 - a0) if not b0 - a0 == 0 else 1)), 
+        b0, 
+        int((b0 - a0) / (abs(b0 - a0) if not b0 - a0 == 0 else 1))),
+        range(
+        a1 + int((b1 - a1) / (abs(b1 - a1) if not b1 - a1 == 0 else 1)), 
+        b1, 
+        int((b1 - a1) / (abs(b1 - a1) if not b1 - a1 == 0 else 1)))
+    ))
+
+dia_coll = lambda a0, a1, b0, b1, br, f: len(list(filter(lambda x: not x,
+    # (print( a0, a1, b0, b1, f) or print(dia_tup(a0, a1, b0, b1)) or True) and 
+    [False if not br[i[1]][i[0]]['t'] == None else True for i in dia_tup(a0, a1, b0, b1)]))) > 0
+
+board_list =    [   # Lower is black, upper is white. n is empty
                 'rcbqkbcr',
                 'pppppppp',
                 'nnnnnnnn',
@@ -110,7 +94,7 @@ board_list_old =    [   # Lower is black, upper is white. n is empty
                 'RCBQKBCR'
                 ]
 
-board_list =    [   # Lower is black, upper is white. n is empty
+board_list_old =    [   # Lower is black, upper is white. n is empty
                 'nnnnnnnn',
                 'npnnnpnn',
                 'nnnnnnnn',
