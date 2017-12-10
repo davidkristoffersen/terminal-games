@@ -14,40 +14,43 @@ pieces = {  # n: name, p:, print, t: team, vp: valid pos, vt: valid type, vm: va
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'q': {'n': 'queen', 'p': '♕', 't': None,
             'vp': lambda a, b, t: True if (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) or
-            (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
+                (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
 
             'vm': lambda a, b, p1, p2, br: True if (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) or
-            (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
+                (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
 
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'r': {'n': 'rook', 'p': '♖', 't': None,
             'vp': lambda a, b, t: True if (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
 
             'vm': lambda a, b, p1, p2, br: False if 
-            ((not b[0] - a[0] and b[1] - a[1]) and ([False if not br[a[0]][i]['t'] == None else True for i in range(a[1] + int((b[1] - a[1]) / abs(b[1] - a[1])), b[1], int((b[1] - a[1]) / abs(b[1] - a[1])))] and False)) or 
-            (b[0] - a[0] and not b[1] - a[1] and False) else True,
+                (b[1] - a[1] and st_coll(a[0], b[0], a[1], b[1], br, False)) or 
+                (b[0] - a[0] and st_coll(a[1], b[1], a[0], b[0], br, True)) else True,
 
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'c': {'n': 'knight', 'p': '♘', 't': None,
             'vp': lambda a, b, t: True if (b[0] - a[0] in [-2, 2] and b[1] - a[1] in [-1, 1]) or (b[0] - a[0] in [-1, 1] and b[1] - a[1] in [-2, 2]) else False, 
 
-            'vm': lambda a, b, p1, p2, br: True if (b[0] - a[0] in [-2, 2] and b[1] - a[1] in [-1, 1]) or (b[0] - a[0] in [-1, 1] and b[1] - a[1] in [-2, 2]) else False, 
+            'vm': lambda a, b, p1, p2, br: True,
 
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'b': {'n': 'bishop', 'p': '♗', 't': None,
             'vp': lambda a, b, t: True if b[0] - a[0] and b[1] - a[1] and (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) else False, 
 
-            'vm': lambda a, b, p1, p2, br: True if b[0] - a[0] and b[1] - a[1] and (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) else False, 
+            'vm': lambda a, b, p1, p2, br: False if 
+                (b[0] - a[0] == b[1] - a[1] and dia_coll(a[0], a[1], b[0], b[1], br, False)) or
+                (not (b[0] - a[0]) + (b[1] - a[1]) and dia_coll(a[0], a[1], b[0], b[1], br, True))
+                else True, 
 
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'p': {'n': 'pawn', 'p': '♙', 't': None,
             'vp': lambda a, b, t: True if not b[1] - a[1] and 
-            ((b[0] - a[0] == -1 or (b[0] - a[0] == -2 and a[0] == 6)) and t) or
-            ((b[0] - a[0] == 1 or (b[0] - a[0] == 2 and a[0] == 1)) and not t) else False, 
+                ((b[0] - a[0] == -1 or (b[0] - a[0] == -2 and a[0] == 6)) and t) or
+                ((b[0] - a[0] == 1 or (b[0] - a[0] == 2 and a[0] == 1)) and not t) or True else False, 
 
             'vm': lambda a, b, p1, p2, br: False if
-            (b[0] - a[0] == -2 and not br[b[0] + 1][b[1]]['t'] == None) or
-            (b[0] - a[0] == 2 and not br[b[0] - 1][b[1]]['t'] == None) else True,
+                (b[0] - a[0] == -2 and not br[b[0] + 1][b[1]]['t'] == None) or
+                (b[0] - a[0] == 2 and not br[b[0] - 1][b[1]]['t'] == None) else True,
 
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'n': {'n': 'nonce', 'p': 'n',  't': None,
@@ -58,7 +61,45 @@ pieces = {  # n: name, p:, print, t: team, vp: valid pos, vt: valid type, vm: va
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         }
 
-board_list =    [   # Lower is black, upper is white. n is empty
+# vm algorithms
+# Straght movement
+st_coll = lambda a0, b0, a1, b1, br, v: len(list(filter(lambda x: not x, 
+                    [False if (v and not br[i][a0]['t'] == None) or (not v and not br[a0][i]['t'] == None) else True for i in range(a1 + int((b1 - a1) / abs(b1 - a1)), b1, int((b1 - a1) / abs(b1 - a1)))]
+                ))) > 0
+# Diagonal movement
+dia_coll = lambda a0, a1, b0, b1, br, f: (print(
+    a0, a1, b0, b1, f) or print(
+        list(zip(*
+        [
+            [
+            i for i in 
+            range(
+            a0 + int((b0 - a0) / (abs(b0 - a0) if not b0 - a0 == 0 else 1)), 
+            b0, 
+            int((b0 - a0) / (abs(b0 - a0) if not b0 - a0 == 0 else 1)))
+            ],
+            [
+            j for j in 
+            range(
+            a1 + int((b1 - a1) / (abs(b1 - a1) if not b1 - a1 == 0 else 1)), 
+            b1, 
+            int((b1 - a1) / (abs(b1 - a1) if not b1 - a1 == 0 else 1))) 
+            ]
+        ]
+        ))
+    )
+    or True) and len(list(filter(lambda x: not x,
+    [False if not f and not br[i][a1 + idx * int((b1 - a1) / (abs(b1 - a1) if not b1 - a1 == 0 else 1))]['t'] == None else True 
+    # [True 
+        for idx, i in 
+            enumerate(range(
+            a0 + int((b0 - a0) / (abs(b0 - a0) if not b0 - a0 == 0 else 1)), 
+            b0, 
+            int((b0 - a0) / (abs(b0 - a0) if not b0 - a0 == 0 else 1))
+            ))
+            ]))) > 0
+
+board_list_old =    [   # Lower is black, upper is white. n is empty
                 'rcbqkbcr',
                 'pppppppp',
                 'nnnnnnnn',
@@ -67,6 +108,17 @@ board_list =    [   # Lower is black, upper is white. n is empty
                 'nnnnnnnn',
                 'PPPPPPPP',
                 'RCBQKBCR'
+                ]
+
+board_list =    [   # Lower is black, upper is white. n is empty
+                'nnnnnnnn',
+                'npnnnpnn',
+                'nnnnnnnn',
+                'nnnbnnnn',
+                'nnnnnnnn',
+                'npnnnnnn',
+                'nnnnnnpn',
+                'nnnnnbnn'
                 ]
 
 # Constant of board size
@@ -121,7 +173,7 @@ def action():
         print('\n\nAction: ', end = '')
 
 def move_valid(ch):
-    # print(ch)
+    print(ch)
     p1, p2 = board[ch[0][0]][ch[0][1]], board[ch[1][0]][ch[1][1]]
     pos1, pos2 = [ch[0][0], ch[0][1]], [ch[1][0], ch[1][1]]
     if p1['n'] == 'nonce': 
