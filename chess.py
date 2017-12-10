@@ -6,23 +6,23 @@ t_col = {False: '\x1b[1;38;2;0;0;0m', True: '\x1b[1;38;2;255;255;255m', None: '\
 
 # All pieces attributes and mooving algorithms
 pieces = {  # n: name, p:, print, t: team, vp: valid pos, vt: valid type ♔ ♕ ♖ ♗ ♘ ♙ ♚ ♛ ♜ ♝ ♞ ♟
-        'k': {'n': 'king', 'p': 'k', 't': None,
+        'k': {'n': 'king', 'p': '♔', 't': None,
             'vp': lambda a, b,t: True if b[0] - a[0] in [-1, 0, 1] and b[1] - a[1] in [-1, 0, 1] else False, 
             'vt': lambda a, b: False},
-        'q': {'n': 'queen', 'p': 'q', 't': None,
+        'q': {'n': 'queen', 'p': '♕', 't': None,
             'vp': lambda a, b, t: True if (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) or
             (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
             'vt': lambda a, b: False},
-        'r': {'n': 'rook', 'p': 'r', 't': None,
+        'r': {'n': 'rook', 'p': '♖', 't': None,
             'vp': lambda a, b, t: True if (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
             'vt': lambda a, b: False},
-        'c': {'n': 'knight', 'p': 'c', 't': None,
+        'c': {'n': 'knight', 'p': '♘', 't': None,
             'vp': lambda a, b, t: True if (b[0] - a[0] in [-2, 2] and b[1] - a[1] in [-1, 1]) or (b[0] - a[0] in [-1, 1] and b[1] - a[1] in [-2, 2]) else False, 
             'vt': lambda a, b: False},
-        'b': {'n': 'bishop', 'p': 'b', 't': None,
+        'b': {'n': 'bishop', 'p': '♗', 't': None,
             'vp': lambda a, b, t: True if b[0] - a[0] and b[1] - a[1] and (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) else False, 
             'vt': lambda a, b: False},
-        'p': {'n': 'pawn', 'p': 'p', 't': None,
+        'p': {'n': 'pawn', 'p': '♙', 't': None,
             'vp': lambda a, b, t: True if not b[1] - a[1] and 
             ((b[0] - a[0] == -1 or (b[0] - a[0] == -2 and a[0] == 6)) and t) or
             ((b[0] - a[0] == 1 or (b[0] - a[0] == 2 and a[0] == 1)) and not t)
