@@ -5,31 +5,56 @@ TR = lambda x: '\x1b[38;2;255;0;0m' + str(x) + '\x1b[m' if not x else '\x1b[38;2
 t_col = {False: '\x1b[1;38;2;0;0;0m', True: '\x1b[1;38;2;255;255;255m', None: '\x1b[2m'}
 
 # All pieces attributes and mooving algorithms
-pieces = {  # n: name, p:, print, t: team, vp: valid pos, vt: valid type ♔ ♕ ♖ ♗ ♘ ♙ ♚ ♛ ♜ ♝ ♞ ♟
+pieces = {  # n: name, p:, print, t: team, vp: valid pos, vt: valid type, vm: valid move, pieces: ♔ ♕ ♖ ♗ ♘ ♙ ♚ ♛ ♜ ♝ ♞ ♟
         'k': {'n': 'king', 'p': '♔', 't': None,
             'vp': lambda a, b,t: True if b[0] - a[0] in [-1, 0, 1] and b[1] - a[1] in [-1, 0, 1] else False, 
+
+            'vm': lambda a, b, p1, p2, br: True if b[0] - a[0] in [-1, 0, 1] and b[1] - a[1] in [-1, 0, 1] else False, 
+
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'q': {'n': 'queen', 'p': '♕', 't': None,
             'vp': lambda a, b, t: True if (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) or
             (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
+
+            'vm': lambda a, b, p1, p2, br: True if (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) or
+            (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
+
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'r': {'n': 'rook', 'p': '♖', 't': None,
             'vp': lambda a, b, t: True if (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
+
+            'vm': lambda a, b, p1, p2, br: False if 
+            ((not b[0] - a[0] and b[1] - a[1]) and ([False if not br[a[0]][i]['t'] == None else True for i in range(a[1] + int((b[1] - a[1]) / abs(b[1] - a[1])), b[1], int((b[1] - a[1]) / abs(b[1] - a[1])))] and False)) or 
+            (b[0] - a[0] and not b[1] - a[1] and False) else True,
+
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'c': {'n': 'knight', 'p': '♘', 't': None,
             'vp': lambda a, b, t: True if (b[0] - a[0] in [-2, 2] and b[1] - a[1] in [-1, 1]) or (b[0] - a[0] in [-1, 1] and b[1] - a[1] in [-2, 2]) else False, 
+
+            'vm': lambda a, b, p1, p2, br: True if (b[0] - a[0] in [-2, 2] and b[1] - a[1] in [-1, 1]) or (b[0] - a[0] in [-1, 1] and b[1] - a[1] in [-2, 2]) else False, 
+
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'b': {'n': 'bishop', 'p': '♗', 't': None,
             'vp': lambda a, b, t: True if b[0] - a[0] and b[1] - a[1] and (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) else False, 
+
+            'vm': lambda a, b, p1, p2, br: True if b[0] - a[0] and b[1] - a[1] and (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) else False, 
+
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'p': {'n': 'pawn', 'p': '♙', 't': None,
             'vp': lambda a, b, t: True if not b[1] - a[1] and 
             ((b[0] - a[0] == -1 or (b[0] - a[0] == -2 and a[0] == 6)) and t) or
-            ((b[0] - a[0] == 1 or (b[0] - a[0] == 2 and a[0] == 1)) and not t)
-            else False, 
+            ((b[0] - a[0] == 1 or (b[0] - a[0] == 2 and a[0] == 1)) and not t) else False, 
+
+            'vm': lambda a, b, p1, p2, br: False if
+            (b[0] - a[0] == -2 and not br[b[0] + 1][b[1]]['t'] == None) or
+            (b[0] - a[0] == 2 and not br[b[0] - 1][b[1]]['t'] == None) else True,
+
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         'n': {'n': 'nonce', 'p': 'n',  't': None,
             'vp': lambda a, b, t: False, 
+
+            'vm': lambda a, b, p1, p2, br: False, 
+
             'vt': lambda a, b: True if not a['t'] == b['t'] else False},
         }
 
@@ -104,6 +129,9 @@ def move_valid(ch):
         return False
     if not p1['vp'](pos1, pos2, p1['t']):
         print('\n\x1b[38;2;255;0;0mInvalid position!\x1b[0;2m\t(press enter)\x1b[m', end = '')
+        return False
+    if not p1['vm'](pos1, pos2, p1, p2, board):
+        print('\n\x1b[38;2;255;0;0mCollision on move!\x1b[0;2m\t(press enter)\x1b[m', end = '')
         return False
     if not p1['vt'](p1, p2):
         print('\n\x1b[38;2;255;0;0mCannot move on this piece type!\x1b[0;2m\t(press enter)\x1b[m', end = '')
