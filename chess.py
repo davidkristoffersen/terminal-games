@@ -11,15 +11,19 @@ pieces = {  # n: name, p:, print, t: team, vp: valid pos, vt: valid type, vm: va
 
             'vm': lambda a, b, p1, p2, br: True if b[0] - a[0] in [-1, 0, 1] and b[1] - a[1] in [-1, 0, 1] else False, 
 
-            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
+            'vt': lambda a, b, x, y: True if not a['t'] == b['t'] else False},
         'q': {'n': 'queen', 'p': '♕', 't': None,
             'vp': lambda a, b, t: True if (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) or
                 (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
 
-            'vm': lambda a, b, p1, p2, br: True if (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) or
-                (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
+            'vm': lambda a, b, p1, p2, br: False if 
+                ((b[0] - a[0] == b[1] - a[1] and dia_coll(a[0], a[1], b[0], b[1], br))) or 
+                ((not (b[0] - a[0]) + (b[1] - a[1]) and dia_coll(a[0], a[1], b[0], b[1], br))) or
+                ((not b[0] - a[0] and b[1] - a[1] and st_coll(a[0], b[0], a[1], b[1], br, False))) or 
+                ((b[0] - a[0] and not b[1] - a[1] and st_coll(a[1], b[1], a[0], b[0], br, True))) 
+                else True, 
 
-            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
+            'vt': lambda a, b, x, y: True if not a['t'] == b['t'] else False},
         'r': {'n': 'rook', 'p': '♖', 't': None,
             'vp': lambda a, b, t: True if (not b[0] - a[0] and b[1] - a[1]) or (b[0] - a[0] and not b[1] - a[1]) else False, 
 
@@ -27,38 +31,40 @@ pieces = {  # n: name, p:, print, t: team, vp: valid pos, vt: valid type, vm: va
                 (b[1] - a[1] and st_coll(a[0], b[0], a[1], b[1], br, False)) or 
                 (b[0] - a[0] and st_coll(a[1], b[1], a[0], b[0], br, True)) else True,
 
-            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
+            'vt': lambda a, b, x, y: True if not a['t'] == b['t'] else False},
         'c': {'n': 'knight', 'p': '♘', 't': None,
             'vp': lambda a, b, t: True if (b[0] - a[0] in [-2, 2] and b[1] - a[1] in [-1, 1]) or (b[0] - a[0] in [-1, 1] and b[1] - a[1] in [-2, 2]) else False, 
 
             'vm': lambda a, b, p1, p2, br: True,
 
-            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
+            'vt': lambda a, b, x, y: True if not a['t'] == b['t'] else False},
         'b': {'n': 'bishop', 'p': '♗', 't': None,
             'vp': lambda a, b, t: True if b[0] - a[0] and b[1] - a[1] and (b[0] - a[0] == b[1] - a[1] or not (b[0] - a[0]) + (b[1] - a[1])) else False, 
 
             'vm': lambda a, b, p1, p2, br: False if 
-                (b[0] - a[0] == b[1] - a[1] and dia_coll(a[0], a[1], b[0], b[1], br, False)) or
-                (not (b[0] - a[0]) + (b[1] - a[1]) and dia_coll(a[0], a[1], b[0], b[1], br, True))
+                (b[0] - a[0] == b[1] - a[1] and dia_coll(a[0], a[1], b[0], b[1], br)) or
+                (not (b[0] - a[0]) + (b[1] - a[1]) and dia_coll(a[0], a[1], b[0], b[1], br))
                 else True, 
 
-            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
+            'vt': lambda a, b, x, y: True if not a['t'] == b['t'] else False},
         'p': {'n': 'pawn', 'p': '♙', 't': None,
-            'vp': lambda a, b, t: True if not b[1] - a[1] and 
-                ((b[0] - a[0] == -1 or (b[0] - a[0] == -2 and a[0] == 6)) and t) or
-                ((b[0] - a[0] == 1 or (b[0] - a[0] == 2 and a[0] == 1)) and not t) or True else False, 
+            'vp': lambda a, b, t: True if
+                (((b[0] - a[0] == -1 and b[1] - a[1] in [-1, 0, 1]) or (b[0] - a[0] == -2 and a[0] == 6)) and t) or
+                (((b[0] - a[0] == 1 and b[1] - a[1] in [-1, 0, 1]) or (b[0] - a[0] == 2 and a[0] == 1)) and not t) else False, 
 
             'vm': lambda a, b, p1, p2, br: False if
                 (b[0] - a[0] == -2 and not br[b[0] + 1][b[1]]['t'] == None) or
-                (b[0] - a[0] == 2 and not br[b[0] - 1][b[1]]['t'] == None) else True,
+                (b[0] - a[0] == 2 and not br[b[0] - 1][b[1]]['t'] == None) or
+                (b[1] - a[1] in [-1, 1] and not (p1['t'] == (not p2['t']))) else True,
 
-            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
+            'vt': lambda a, b, x, y: True if (b['t'] == None and y[1] - x[1] == 0) or
+            (((a['t'] and b['t'] == False) or (b['t'] and a['t'] == False)) and y[1] - x[1] in [-1, 1]) else False},
         'n': {'n': 'nonce', 'p': 'n',  't': None,
             'vp': lambda a, b, t: False, 
 
             'vm': lambda a, b, p1, p2, br: False, 
 
-            'vt': lambda a, b: True if not a['t'] == b['t'] else False},
+            'vt': lambda a, b, x, y: True if not a['t'] == b['t'] else False},
         }
 
 # vm algorithms
@@ -79,9 +85,9 @@ dia_tup = lambda a0, a1, b0, b1: list(zip(
         int((b1 - a1) / (abs(b1 - a1) if not b1 - a1 == 0 else 1)))
     ))
 
-dia_coll = lambda a0, a1, b0, b1, br, f: len(list(filter(lambda x: not x,
-    # (print( a0, a1, b0, b1, f) or print(dia_tup(a0, a1, b0, b1)) or True) and 
-    [False if not br[i[1]][i[0]]['t'] == None else True for i in dia_tup(a0, a1, b0, b1)]))) > 0
+dia_coll = lambda a0, a1, b0, b1, br: len(list(filter(lambda x: not x,
+    # (print( a0, a1, b0, b1) or print(dia_tup(a0, a1, b0, b1)) or True) and 
+    [False if not br[i[0]][i[1]]['t'] == None else True for i in dia_tup(a0, a1, b0, b1)]))) > 0
 
 board_list =    [   # Lower is black, upper is white. n is empty
                 'rcbqkbcr',
@@ -94,11 +100,11 @@ board_list =    [   # Lower is black, upper is white. n is empty
                 'RCBQKBCR'
                 ]
 
-board_list_old =    [   # Lower is black, upper is white. n is empty
+board_list_test =    [   # Lower is black, upper is white. n is empty
                 'nnnnnnnn',
                 'npnnnpnn',
-                'nnnnnnnn',
-                'nnnbnnnn',
+                'nnnknnnn',
+                'nnnKnnnn',
                 'nnnnnnnn',
                 'npnnnnnn',
                 'nnnnnnpn',
@@ -156,10 +162,13 @@ def action():
         prb(board)
         print('\n\nAction: ', end = '')
 
-def move_valid(ch):
-    print(ch)
+def move_valid(ch, turn):
+    # print(ch)
     p1, p2 = board[ch[0][0]][ch[0][1]], board[ch[1][0]][ch[1][1]]
     pos1, pos2 = [ch[0][0], ch[0][1]], [ch[1][0], ch[1][1]]
+    if not p1['t'] == turn:
+        print('\n\x1b[38;2;255;0;0mNot your turn!\x1b[0;2m\t(press enter)\x1b[m', end = '')
+        return False
     if p1['n'] == 'nonce': 
         print('\n\x1b[38;2;255;0;0mNonce cannot be moved!\x1b[0;2m\t(press enter)\x1b[m', end = '')
         return False
@@ -169,7 +178,7 @@ def move_valid(ch):
     if not p1['vm'](pos1, pos2, p1, p2, board):
         print('\n\x1b[38;2;255;0;0mCollision on move!\x1b[0;2m\t(press enter)\x1b[m', end = '')
         return False
-    if not p1['vt'](p1, p2):
+    if not p1['vt'](p1, p2, pos1, pos2):
         print('\n\x1b[38;2;255;0;0mCannot move on this piece type!\x1b[0;2m\t(press enter)\x1b[m', end = '')
         return False
 
@@ -177,21 +186,30 @@ def move_valid(ch):
 
 # Moving
 def move(ch):
+    res = True if board[ch[1][0]][ch[1][1]]['n'] == 'king' else False
     board[ch[1][0]][ch[1][1]] = board[ch[0][0]][ch[0][1]]
     board[ch[0][0]][ch[0][1]] = memcpy(pieces['n'])
     # prb(board)    # TEMP
+    return res
 
 # 16 pieces: one king, one queen, two rooks, two knights, two bishops, and eight pawns
 if __name__ == '__main__':
     board = create_board()
+    turn = True
 
     # Main loop
     while True:     
         while True:
             ch = action()
             ch = convmove(ch)
-            if move_valid(ch): break
+            if move_valid(ch, turn): break
             input()
-        move(ch)
+        win = move(ch)
+        if win:
+            os.system('clear')
+            prb(board)
+            print('\n\n\x1b[1mWhite/Player1 won!\x1b[m') if turn else print('\n\n\x1b[1;38;2;0;0;0mBlack/Player2 won!\x1b[m')
+            exit()
+        turn = not turn 
         # print('\n\n\x1b[0;2mPress enter\x1b[m', end = '') # TEMP
         # input()   # TEMP
